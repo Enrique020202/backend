@@ -14,7 +14,7 @@ model = load_model(MODEL_PATH)
 # Class names must match your model's training
 class_names = ['Blight', 'Common Rust', 'Gray Leaf Spot', 'Healthy', 'Unknown']
 
-# Expected input size for the model
+
 target_size = (224, 224)
 
 # Disease info: Symptoms and Remedies
