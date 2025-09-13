@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
-import os
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tensorflow.keras.preprocessing.image import img_to_array
+from PIL import Image
+import io
 
 app = Flask(__name__)
 
@@ -14,7 +15,7 @@ model = load_model(MODEL_PATH)
 # Class names must match your model's training
 class_names = ['Blight', 'Common Rust', 'Gray Leaf Spot', 'Healthy', 'Unknown']
 
-
+# Expected input size for the model
 target_size = (224, 224)
 
 # Disease info: Symptoms and Remedies
@@ -66,14 +67,14 @@ disease_info = {
 }
 
 # Preprocess image for prediction
-def preprocess_image(image_path):
-    img = load_img(image_path, target_size=target_size)
+def preprocess_image(image):
+    img = image.resize(target_size)
     img_array = img_to_array(img)
     img_array = img_array / 255.0  # Normalize to [0,1]
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
-# Flask route to handle prediction (like upload.php)
+# Flask route to handle prediction
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
@@ -83,14 +84,13 @@ def predict():
     if file.filename == '':
         return jsonify({"error": "Empty filename"}), 400
 
-    # Save uploaded file temporarily
-    os.makedirs("uploads", exist_ok=True)
-    file_path = os.path.join("uploads", file.filename)
-    file.save(file_path)
+    # Read image directly from memory (not saved to disk)
+    img_bytes = file.read()
+    image = Image.open(io.BytesIO(img_bytes))
 
     # Preprocess + Predict
-    image = preprocess_image(file_path)
-    prediction = model.predict(image)
+    image_array = preprocess_image(image)
+    prediction = model.predict(image_array)
     predicted_class = class_names[np.argmax(prediction)]
     confidence = float(np.max(prediction) * 100)
 
@@ -102,7 +102,6 @@ def predict():
 
     # Build JSON response
     result = {
-        "filename": file.filename,
         "prediction": predicted_class,
         "confidence": round(confidence, 2),
         "symptoms": info["symptoms"],
