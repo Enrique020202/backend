@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = "Corn disease detection backend"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "3.0.3"
+tensorflow-cpu = "2.20.0"
+numpy = "1.26.4"
+pillow = "10.4.0"
+gunicorn = "22.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
